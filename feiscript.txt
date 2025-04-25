@@ -111,9 +111,9 @@ types:
 		floating point (posit):
 			"p" [ bit_count ] ["e" exp_count]
 		vector:
-			"vec" element_count ("u" | "i" | "f") [ bit_count ]
-			"vec" element_count "p" [ bit_count ] ["e" exp_count ]
-			"vec" element_count "b"
+			"v" element_count ("u" | "i" | "f") [ bit_count ]
+			"v" element_count "p" [ bit_count ] ["e" exp_count ]
+			"v" element_count "b"
 		string: "string"
 		Boolean: "bool"
 		unit: "_"
@@ -225,7 +225,7 @@ expressions and types:
 		+ - * /
 		** (exponent)
 	compare operators
-		> < == != = <=
+		> < == != >= <=
 		<=>
 	assign operators
 		+= -= *= /= %= **=
