@@ -8,7 +8,7 @@
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
-namespace Fae {
+namespace Fei {
 bool LoadFileV(const string_view path, string &outdata) {
 	auto file = std::fstream(string(path), std::ios_base::in | std::ios_base::binary | std::ios_base::ate);
 	if(!file.is_open()) return false;
@@ -22,15 +22,15 @@ bool LoadFileV(const string_view path, string &outdata) {
 }
 }
 
-Fae::module_source_ptr load_syntax_tree(std::string_view const file) {
+Fei::module_source_ptr load_syntax_tree(std::string_view const file) {
 	std::string source;
-	if(!Fae::LoadFileV(file, source)) return nullptr;
-	return std::move(Fae::load_syntax_tree(std::move(source)));
+	if(!Fei::LoadFileV(file, source)) return nullptr;
+	return std::move(Fei::load_syntax_tree(std::move(source)));
 }
 
 int main(int argc, char**argv) {
 	std::vector<std::string_view> str_args;
-	auto script = std::make_unique<Fae::ScriptContext>();
+	auto script = std::make_unique<Fei::ScriptContext>();
 	for(int i = 0; i < argc; i++) {
 		str_args.emplace_back(std::string_view(argv[i]));
 	}
@@ -41,7 +41,7 @@ int main(int argc, char**argv) {
 	bool f_syntax_tree = false;
 	uint32_t verbose = 0;
 	bool any_files_were_processed = false;
-	Fae::module_source_ptr test_syntax_tree;
+	Fei::module_source_ptr test_syntax_tree;
 	auto arg_itr = str_args.cbegin() + 1;
 	auto end = str_args.cend();
 	auto nullout = std::ostream(nullptr);
@@ -67,35 +67,35 @@ int main(int argc, char**argv) {
 			} else if(f_only_parse) {
 				f_only_parse = false;
 				any_files_were_processed = true;
-				auto parsed = Fae::test_parse_sourcefile(verbose >= 2 ? std::cerr : nullout, arg);
+				auto parsed = Fei::test_parse_sourcefile(verbose >= 2 ? std::cerr : nullout, arg);
 				if(!parsed) return 1;
-				auto &parsed_source = Fae::get_source(parsed);
+				auto &parsed_source = Fei::get_source(parsed);
 				if(test_syntax_tree) {
 					if(verbose) {
-						Fae::show_source_tree(std::cerr, *test_syntax_tree);
-						Fae::show_source_tree(std::cout, parsed_source);
+						Fei::show_source_tree(std::cerr, *test_syntax_tree);
+						Fei::show_source_tree(std::cout, parsed_source);
 					}
-					if(!Fae::show_node_diff(std::cerr, *parsed_source.root_tree, *parsed_source.root_tree)) {
+					if(!Fei::show_node_diff(std::cerr, *parsed_source.root_tree, *parsed_source.root_tree)) {
 						std::cerr << "equality function has failed\n";
 						return 2;
 					}
-					if(!Fae::show_node_diff(std::cerr, *test_syntax_tree->root_tree, *test_syntax_tree->root_tree)) {
+					if(!Fei::show_node_diff(std::cerr, *test_syntax_tree->root_tree, *test_syntax_tree->root_tree)) {
 						std::cerr << "equality function has failed\n";
 						return 2;
 					}
 
-					return Fae::show_node_diff(std::cerr, *test_syntax_tree->root_tree, *parsed_source.root_tree)
+					return Fei::show_node_diff(std::cerr, *test_syntax_tree->root_tree, *parsed_source.root_tree)
 						? 0 : 1;
 				}
 				if(verbose) {
 					//auto dbg_file = std::fstream("./debug.txt", std::ios_base::out | std::ios_base::trunc);
-					Fae::show_source_tree(std::cout, parsed_source);
+					Fei::show_source_tree(std::cout, parsed_source);
 				}
 			} else if(f_only_compile) {
 				f_only_compile = false;
 				any_files_were_processed = true;
 				auto dbg_file = std::fstream("./debug.txt", std::ios_base::out | std::ios_base::trunc);
-				Fae::test_compile_sourcefile(dbg_file, arg);
+				Fei::test_compile_sourcefile(dbg_file, arg);
 			} else {
 				any_files_were_processed = true;
 				script->LoadScriptFile(arg, arg);
@@ -104,7 +104,7 @@ int main(int argc, char**argv) {
 		}
 	}
 	if(test_syntax_tree && verbose && !any_files_were_processed)
-		Fae::show_source_tree(std::cerr, *test_syntax_tree);
+		Fei::show_source_tree(std::cerr, *test_syntax_tree);
 	return 0;
 }
 

@@ -1,4 +1,4 @@
-name: FaeScript
+name: FeiFoxScript
 file extension (.ffs)
 Almost second name: Tsun
 

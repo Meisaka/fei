@@ -1,3 +1,3 @@
 
-WIP FaeScript spec and reference implementation
+WIP FeiFoxScript spec and reference implementation
 

@@ -19,7 +19,7 @@
 
 using namespace std::string_view_literals;
 
-namespace Fae {
+namespace Fei {
 
 template<class R, class P>
 auto find_last_if(const R &r, P pred) {
@@ -128,21 +128,21 @@ struct VarRef {
 };
 
 struct Register {
-	FaeVM &vm;
+	FeiVM &vm;
 	uint64_t value;
 	VarType vtype;
 	Register() = delete;
 	~Register();
-	Register(FaeVM &_vm);
+	Register(FeiVM &_vm);
 	Register(const Register &v);
 	Register(Register &&v);
 	Register& operator=(const Register &v);
 	Register& operator=(Register &&v);
-	Register(FaeVM &_vm, uint64_t v)
+	Register(FeiVM &_vm, uint64_t v)
 		: vm{_vm}, value{v}, vtype{VarType::Integer} {}
-	Register(FaeVM &_vm, int64_t v)
+	Register(FeiVM &_vm, int64_t v)
 		: vm{_vm}, value{static_cast<uint64_t>(v)}, vtype{VarType::Integer} {}
-	Register(FaeVM &_vm, uint64_t v, VarType t)
+	Register(FeiVM &_vm, uint64_t v, VarType t)
 		: vm{_vm}, value{v}, vtype{t} {}
 };
 
@@ -3341,14 +3341,14 @@ struct StackFrame {
 
 std::ostream &operator<<(std::ostream &os, const Register &v);
 
-struct FaeVM;
-struct FaeTask {
+struct FeiVM;
+struct FeiTask {
 	std::vector<std::shared_ptr<StackFrame>> scope_stack;
 	std::vector<Register> value_stack;
 	Register accumulator;
 	std::shared_ptr<StackFrame> current_frame;
-	FaeVM &vm;
-	FaeTask(FaeVM &vm);
+	FeiVM &vm;
+	FeiTask(FeiVM &vm);
 	void enter_frame(std::shared_ptr<FrameContext> context, std::shared_ptr<UpScope> up);
 	size_t var_stack_size() const {
 		size_t var_end = current_frame->first_var_pos + current_frame->context->var_declarations.size();
@@ -3408,14 +3408,14 @@ struct FaeTask {
 	};
 };
 
-struct FaeVM {
+struct FeiVM {
 	std::vector<string> str_table;
 	std::vector<VarRef> var_table;
 	std::unordered_map<size_t, module_ptr> script_map;
-	std::vector<std::shared_ptr<FaeTask>> tasks;
-	std::shared_ptr<FaeTask> current_task;
+	std::vector<std::shared_ptr<FeiTask>> tasks;
+	std::shared_ptr<FeiTask> current_task;
 	std::unordered_map<size_t, Register> imports_table;
-	FaeVM();
+	FeiVM();
 	Register put_variable(VMVar *v) {
 		var_table.emplace_back(VarRef{v});
 		return Register{*this, var_table.size() - 1, v->get_type()};
@@ -3472,14 +3472,14 @@ struct VMString : VMVar {
 };
 
 struct VMNativeFunction : VMVar {
-	typedef std::function<void(FaeTask&)> function_t;
+	typedef std::function<void(FeiTask&)> function_t;
 	function_t native;
 	VMNativeFunction(function_t n) : native{std::move(n)} {}
 	VarType get_type() const { return VarType::NativeFunction; }
 };
 
-FaeVM::FaeVM() {
-	current_task = std::make_shared<FaeTask>(*this);
+FeiVM::FeiVM() {
+	current_task = std::make_shared<FeiTask>(*this);
 	str_table.push_back(string{0, '\0'});
 	str_table.push_back(string{0, '\0'});
 	{
@@ -3488,7 +3488,7 @@ FaeVM::FaeVM() {
 		imports_table.emplace(sys_index, put_variable(sys_obj = new VMObject{}));
 		sys_obj->values.emplace(
 			find_or_add_string("randomInt"sv),
-			put_variable(new VMNativeFunction([](FaeTask &task) {
+			put_variable(new VMNativeFunction([](FeiTask &task) {
 				task.accumulator = Register{task.vm, uint64_t{4ull}};
 			})));
 	}
@@ -3498,12 +3498,12 @@ FaeVM::FaeVM() {
 		imports_table.emplace(io_index, put_variable(io_obj = new VMObject{}));
 		io_obj->values.emplace(
 			find_or_add_string("input"sv),
-			put_variable(new VMNativeFunction([](FaeTask &task) {
+			put_variable(new VMNativeFunction([](FeiTask &task) {
 				task.accumulator = Register{task.vm, uint64_t{4ull}};
 			})));
 		io_obj->values.emplace(
 			find_or_add_string("print"sv),
-			put_variable(new VMNativeFunction([](FaeTask &task) {
+			put_variable(new VMNativeFunction([](FeiTask &task) {
 				std::cout << "print:" << task.value_stack.back() << '\n';
 			})));
 	}
@@ -3515,7 +3515,7 @@ Register::~Register() {
 	}
 	vtype = VarType::Unset;
 }
-Register::Register(FaeVM &_vm) : vm{_vm}, value{0}, vtype{VarType::Unset} {}
+Register::Register(FeiVM &_vm) : vm{_vm}, value{0}, vtype{VarType::Unset} {}
 Register::Register(const Register &v) : vm{v.vm}, value{v.value}, vtype{v.vtype} {
 	if(is_vtype_pointer(vtype)) {
 		vm.var_table[value].add_ref();
@@ -3632,8 +3632,8 @@ std::ostream &operator<<(std::ostream &os, const Register &v) {
 	return os;
 }
 
-FaeTask::FaeTask(FaeVM &vm) : vm{vm}, accumulator(vm) { }
-void FaeTask::enter_frame(std::shared_ptr<FrameContext> context, std::shared_ptr<UpScope> up) {
+FeiTask::FeiTask(FeiVM &vm) : vm{vm}, accumulator(vm) { }
+void FeiTask::enter_frame(std::shared_ptr<FrameContext> context, std::shared_ptr<UpScope> up) {
 	current_frame = std::make_shared<StackFrame>(context, up);
 	current_frame->scope->vars.resize(context->closed_declarations.size(), Register(vm));
 	value_stack.resize(current_frame->first_arg_pos + context->arg_declarations.size(), Register(vm));
@@ -3641,7 +3641,7 @@ void FaeTask::enter_frame(std::shared_ptr<FrameContext> context, std::shared_ptr
 	value_stack.resize(current_frame->first_var_pos + context->var_declarations.size(), Register(vm));
 }
 
-ScriptContext::ScriptContext() : vm(std::make_shared<FaeVM>()) {}
+ScriptContext::ScriptContext() : vm(std::make_shared<FeiVM>()) {}
 void ScriptContext::LoadScriptFile(const string_view file_path, const string_view into_name) {
 	// load contents of script file at "file_path", put into namespace "into_name"
 	auto dbg_file = std::fstream("./debug.txt", std::ios_base::out | std::ios_base::trunc);
@@ -3655,7 +3655,7 @@ void ScriptContext::LoadScriptFile(const string_view file_path, const string_vie
 }
 
 void ScriptContext::FunctionCall(const string_view func_name) {
-	FaeVM *vm = this->vm.get();
+	FeiVM *vm = this->vm.get();
 	size_t func_str_index = vm->find_string(func_name);
 	auto found = vm->script_map.find(func_str_index);
 	if(found == vm->script_map.cend()) {

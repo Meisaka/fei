@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Fae {
+namespace Fei {
 
 using string = std::string;
 using string_view = std::string_view;
@@ -97,7 +97,7 @@ module_ptr compile_sourcefile(std::ostream &out, string file_source);
 module_ptr test_parse_sourcefile(std::ostream &dbg, const string_view file_path);
 module_ptr test_compile_sourcefile(std::ostream &dbg, const string_view file_path);
 
-struct FaeVM;
+struct FeiVM;
 class ScriptContext {
 public:
 
@@ -107,7 +107,7 @@ public:
 	virtual void FunctionCall(const string_view i);
 	virtual void LoadScriptFile(const string_view f, const string_view i);
 private:
-	std::shared_ptr<FaeVM> vm;
+	std::shared_ptr<FeiVM> vm;
 };
 }
 
