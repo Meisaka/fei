@@ -70,10 +70,10 @@ maybe destructors
 control flow:
 	control flow are expressions
 	kinds:
-		keywords: if else elif elsif elseif
+		keywords: if else elif elsif elseif elf
 		else_expr: "else" expresssion
-		elseif_expr: elseif_keyword expression [elseif_expression | else_expression]
-		if_expr: if expresssion [elseif_expression | else_expression]
+		elseif_expr: elseif_keyword expression expression [elseif_expression | else_expression]
+		if_expr: if expresssion expression [elseif_expression | else_expression]
 		loop while until
 		continue
 		break or break to label
@@ -155,17 +155,40 @@ variables
 	variable mutability:
 		// mutable pattern "mut": write many
 		// immutable pattern "let": read only, write once
-		var_def: var_name [":" typedef]
-		mut_var_def: "mut" var_def
-		var_decl_init:
-			( mut_var_def | ( "let" ( var_def | mut_var_def ) ) )
-		var_decl_expression: var_decl_init ["=" expression]
+		var_def := var_name [":" typedef]
+		var_decl := var_def [ "," var_decl ]
+		var_decl_assign := var_def [ "=" expression ] [ "," var_decl_assign ]
+		mut_def := "mut" var_def
+		mut_decl := ( var_def | mut_def ) [ "," mut_decl ]
+		mut_decl_assign := ( var_def | mut_def ) "=" expression [ "," mut_decl_assign ]
+		var_decl_let := "let" ( var_decl_assign | mut_decl_assign )
+		var_decl_mut := "mut" var_decl_assign
 		when expression is omitted, the var_decl_expression evaluates to unit
 	tuple assignment:
-		var_tuple_elem: ("_" | var_def | mut_var_def) [ "," [ var_tuple_elem ] ]
-		tuple_decl: var_decl_init "," [ var_tuple_elem ] "=" expression
-		
-		
+		tuple_decl_let := "let" "(" ( var_decl | mut_decl ) ")"
+		tuple_decl_mut := "mut" "(" var_decl ")"
+		tuple_decl := ( tuple_decl_let | tuple_decl_mut ) "=" expression
+
+Examples:
+// comma grouped declartions
+let f, a, e
+let (f, a, e) = 3, 4, 5
+let mut f, a, mut e
+// all mutable
+mut f, a, e
+mut (f, a, e) = 1, 2, 3
+// assignment first
+let f = 3, mut a = 4, e = 5
+let n = 3
+let mut f: Type = 2, n: OtherType, e: MoreType = somevalue
+// all mutable
+mut e = 3
+mut f = 1, a = 2, e = 3
+// just function things
+let named_function => function_block_or_expression
+
+a,b,c = *array
+
 expressions and types:
 	expression groups:
 		"(" expression ")"
@@ -211,6 +234,7 @@ expressions and types:
 	vector type features:
 		.* (dot product)
 		.+ (cross product)
+		^.^ (quaternion rotation)
 	strings:
 		delimiter: '\'' | '"'
 		escapes: "\" esc_sequence
@@ -225,8 +249,8 @@ expressions and types:
 		inclusive: numeric_literal "..=" numeric_literal
 	bool: "true" and "false"
 	functions:
-		should "declare function" keyword exist? (def, f, fn, func, function)
-			>>> no, I think it should not
+		there is no "declare function" keyword (def, f, fn, func, function)
+		it is all symbolic
 		argument: [identifer] [":" type_identifer]
 		argument_list: "(" [ argument ["," [argument ...] ] ] ")"
 		[ argument_list ] "=>" ( expression | object )
@@ -243,11 +267,32 @@ expressions and types:
 				this allows access without the leading "."
 				mutability must also be set this way, argument access is readonly by default
 			using dynamic access will bind all arguments to the function as a list
-		calling:
-		function_expression (
+	calling functions:
+		a function_expression is any of:
+			a declaration, an identifier, or identifier chain;
+			that evaluates to a function
+		func_call := function_expression (
 			"(" expression_list ")"
 			| "[" expression_list "]"
-			| expression_list terminating_token )
+			| expression_list
+		)
+		func_chain := ( expression | func_chain ) "|>" ( function_expression | func_call )
+Example of calling without a delimiter:
+named_function arg1, arg2, arg3 // et c.
+THE problem:
+
+// the if wants the value from the function
+// we didn't use delimiters here, because the spec said we can skip them
+if named_function the_one_argument
+	thing_to_do_conditionally()
+a_function_after_the_if()
+
+// what does the "if" do in this case?
+// eval the "named_function" variable
+// then call the_one_argument as a function without parameters
+// if the types don't work out, this would be type error
+// otherwise would be an unintended logic error
+
 		calling with object:
 		function_expression "{" object_expression "}"
 	object literal types:

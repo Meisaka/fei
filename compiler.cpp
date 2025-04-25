@@ -1855,8 +1855,11 @@ bool walk_expression(WalkContext &walk, std::shared_ptr<FrameContext> &ctx, cons
 					<< var_pos->up_count << ","
 					<< var_pos->decl_index << "\n";
 				return true;
+			} else if(IS_TOKEN(left_ref, O_Dot)) {
+				_DW(walk.err) << "assign to object" << expr->slot1 << '\n';
+				return false;
 			} else {
-				_DW(walk.err) << "unknown reference type: " << expr->slot1 << '\n';
+				_DW(walk.err) << "unknown assign reference type: " << expr->slot1 << '\n';
 				return false;
 			}
 		} else if(
